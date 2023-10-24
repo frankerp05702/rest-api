@@ -8,6 +8,14 @@ app = Flask(__name__)
 def get_stores():
     return {"stores": list(stores.values())}
 
+@app.get("/storeid") #http:127.0.0.1:5000
+def get_stores_ids():
+    return {"stores_ids": list(stores.keys())}
+
+@app.get("/item") #http:127.0.0.1:5000
+def get_items():
+    return {"items": list(items.values())}
+
 @app.post("/store")
 def create_store():
     store_data = request.get_json()
@@ -38,7 +46,7 @@ def get_item(item_id):
 @app.get("/store/<string:store_id>")
 def get_store(store_id):
     try:
-        return stores["store_id"], 201
+        return stores[store_id], 201
     except KeyError:
         return { "message": "Store not found" }, 404
 
