@@ -63,6 +63,14 @@ def get_item(item_id):
         return items[item_id]
     except:
         return { "message":"Item not found" }, 404
+    
+@app.delete("/item/<string:item_id>")
+def delete_item(item_id):
+    try:
+        del items[item_id]
+        return { "message":"Item deleted" }, 201
+    except:
+        return { "message":"Item not found" }, 404
 
 @app.get("/store/<string:store_id>")
 def get_store(store_id):
@@ -71,13 +79,20 @@ def get_store(store_id):
     except KeyError:
         return { "message": "Store not found" }, 404
 
+@app.delete("/store/<string:store_id>")
+def delete_store(store_id):
+    try:
+        del stores[store_id]
+        return { "message":"store deleted" }, 201
+    except:
+        return { "message":"store not found" }, 404
+
 @app.get("/store/<string:store_id>/item")
 def get_store_items(store_id):
     res_items = []
+    if store_id not in stores.keys():
+        return { "message": "Store not found" }, 404
     for item in items.values():
         if item["store_id"]==store_id:
             res_items.append(item)
-    if len(res_items)>0:
-        return { "items": res_items }, 201
-    else:
-        return { "message": "Store not found" }, 404
+    return { "items": res_items }, 201
