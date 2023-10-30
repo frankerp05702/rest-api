@@ -19,6 +19,11 @@ def get_items():
 @app.post("/store")
 def create_store():
     store_data = request.get_json()
+    if "name" not in store_data:
+        return { "message": "Bad request. Ensure 'name' is included in the JSON payload" }, 400
+    for store in stores.values():
+        if store["name"]==store_data["name"]:
+            return { "message": "Store already exists" }, 400
     store_id = uuid.uuid4().hex
     store = { **store_data, "id":store_id }
     stores[store_id] = store
@@ -27,6 +32,22 @@ def create_store():
 @app.post("/item")
 def create_item():
     item_data = request.get_json()
+    # Here not only validate data exists,
+    # Also what type of data. Price should be a float, for example
+    if(
+        "price" not in item_data
+        or "store_id" not in item_data
+        or "name" not in item_data
+    ):
+        return { "message": "Bad request. Ensure 'price', 'store_id' and 'name' are included in the JSON payload" }, 400
+    # Ensure that same item is not added twice
+    for item in items.values():
+        if(
+            item["name"]==item_data["name"]
+            or item["store_id"]==item_data["store_id"]
+        ):
+            return { "message": "Item already exists" }, 400
+        
     if item_data["store_id"] not in stores:
         return { "message": "Store not found" }, 404
     
