@@ -57,6 +57,24 @@ def create_item():
 
     return item, 201
 
+@app.put("/item/<string:item_id>")
+def update_item(item_id):
+    item_data = request.get_json()
+    # Here not only validate data exists,
+    # Also what type of data. Price should be a float, for example
+    if(
+        "price" not in item_data
+        and "name" not in item_data
+    ):
+        return { "message": "Bad request. Ensure 'price' and 'name' are included in the JSON payload" }, 400
+    
+    try:
+        item = items[item_id]
+        item |= item_data
+        return item
+    except KeyError:
+        return { "message":"Item not found" }, 404
+
 @app.get("/item/<string:item_id>")
 def get_item(item_id):
     try:
@@ -69,7 +87,7 @@ def delete_item(item_id):
     try:
         del items[item_id]
         return { "message":"Item deleted" }, 201
-    except:
+    except KeyError:
         return { "message":"Item not found" }, 404
 
 @app.get("/store/<string:store_id>")
