@@ -12,9 +12,22 @@ def get_stores():
 def get_stores_ids():
     return {"stores_ids": list(stores.keys())}
 
-@app.get("/item") #http:127.0.0.1:5000
-def get_items():
-    return {"items": list(items.values())}
+@app.get("/store/<string:store_id>")
+def get_store(store_id):
+    try:
+        return stores[store_id], 201
+    except KeyError:
+        return { "message": "Store not found" }, 404
+    
+@app.get("/store/<string:store_id>/item")
+def get_store_items(store_id):
+    res_items = []
+    if store_id not in stores.keys():
+        return { "message": "Store not found" }, 404
+    for item in items.values():
+        if item["store_id"]==store_id:
+            res_items.append(item)
+    return { "items": res_items }, 201
 
 @app.post("/store")
 def create_store():
@@ -29,6 +42,40 @@ def create_store():
     stores[store_id] = store
     return store, 201
 
+@app.delete("/store/<string:store_id>")
+def delete_store(store_id):
+    try:
+        del stores[store_id]
+        return { "message":"store deleted" }, 201
+    except:
+        return { "message":"store not found" }, 404
+    
+@app.put("/store/<string:store_id>")
+def update_store(store_id):
+    store_data = request.get_json()
+    # Here not only validate data exists,
+    # Also what type of data. Price should be a float, for example
+    if "name" not in store_data:
+        return { "message": "Bad request. Ensure 'name' is included in the JSON payload" }, 400
+    
+    try:
+        store = stores[store_id]
+        store |= store_data
+        return store
+    except KeyError:
+        return { "message":"store not found" }, 404
+
+@app.get("/item") #http:127.0.0.1:5000
+def get_items():
+    return {"items": list(items.values())}
+
+@app.get("/item/<string:item_id>")
+def get_item(item_id):
+    try:
+        return items[item_id]
+    except:
+        return { "message":"Item not found" }, 404
+    
 @app.post("/item")
 def create_item():
     item_data = request.get_json()
@@ -56,6 +103,14 @@ def create_item():
     items[item_id] = item
 
     return item, 201
+    
+@app.delete("/item/<string:item_id>")
+def delete_item(item_id):
+    try:
+        del items[item_id]
+        return { "message":"Item deleted" }, 201
+    except KeyError:
+        return { "message":"Item not found" }, 404
 
 @app.put("/item/<string:item_id>")
 def update_item(item_id):
@@ -74,43 +129,3 @@ def update_item(item_id):
         return item
     except KeyError:
         return { "message":"Item not found" }, 404
-
-@app.get("/item/<string:item_id>")
-def get_item(item_id):
-    try:
-        return items[item_id]
-    except:
-        return { "message":"Item not found" }, 404
-    
-@app.delete("/item/<string:item_id>")
-def delete_item(item_id):
-    try:
-        del items[item_id]
-        return { "message":"Item deleted" }, 201
-    except KeyError:
-        return { "message":"Item not found" }, 404
-
-@app.get("/store/<string:store_id>")
-def get_store(store_id):
-    try:
-        return stores[store_id], 201
-    except KeyError:
-        return { "message": "Store not found" }, 404
-
-@app.delete("/store/<string:store_id>")
-def delete_store(store_id):
-    try:
-        del stores[store_id]
-        return { "message":"store deleted" }, 201
-    except:
-        return { "message":"store not found" }, 404
-
-@app.get("/store/<string:store_id>/item")
-def get_store_items(store_id):
-    res_items = []
-    if store_id not in stores.keys():
-        return { "message": "Store not found" }, 404
-    for item in items.values():
-        if item["store_id"]==store_id:
-            res_items.append(item)
-    return { "items": res_items }, 201
