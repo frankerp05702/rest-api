@@ -1,5 +1,6 @@
 import uuid
 from flask import Flask, request
+from flask_smorest import abort
 from db import items, stores
 
 app = Flask(__name__)
@@ -17,13 +18,13 @@ def get_store(store_id):
     try:
         return stores[store_id], 201
     except KeyError:
-        return { "message": "Store not found" }, 404
+        abort( 404, message="Store not found" )
     
 @app.get("/store/<string:store_id>/item")
 def get_store_items(store_id):
     res_items = []
     if store_id not in stores.keys():
-        return { "message": "Store not found" }, 404
+        abort( 404, message="Store not found" )
     for item in items.values():
         if item["store_id"]==store_id:
             res_items.append(item)
@@ -33,10 +34,10 @@ def get_store_items(store_id):
 def create_store():
     store_data = request.get_json()
     if "name" not in store_data:
-        return { "message": "Bad request. Ensure 'name' is included in the JSON payload" }, 400
+        abort( 400, message="Bad request. Ensure 'name' is included in the JSON payload" )
     for store in stores.values():
         if store["name"]==store_data["name"]:
-            return { "message": "Store already exists" }, 400
+            abort( 400, message="Store already exists" )
     store_id = uuid.uuid4().hex
     store = { **store_data, "id":store_id }
     stores[store_id] = store
@@ -48,7 +49,7 @@ def delete_store(store_id):
         del stores[store_id]
         return { "message":"store deleted" }, 201
     except:
-        return { "message":"store not found" }, 404
+        abort( 404, message="Store not found" )
     
 @app.put("/store/<string:store_id>")
 def update_store(store_id):
@@ -56,14 +57,14 @@ def update_store(store_id):
     # Here not only validate data exists,
     # Also what type of data. Price should be a float, for example
     if "name" not in store_data:
-        return { "message": "Bad request. Ensure 'name' is included in the JSON payload" }, 400
+        abort( 400, message="Bad request. Ensure 'name' is included in the JSON payload")
     
     try:
         store = stores[store_id]
         store |= store_data
         return store
     except KeyError:
-        return { "message":"store not found" }, 404
+        abort( 404, message="Store not found" )
 
 @app.get("/item") #http:127.0.0.1:5000
 def get_items():
@@ -74,7 +75,7 @@ def get_item(item_id):
     try:
         return items[item_id]
     except:
-        return { "message":"Item not found" }, 404
+        abort( 404, message="Item not found" )
     
 @app.post("/item")
 def create_item():
@@ -86,7 +87,7 @@ def create_item():
         or "store_id" not in item_data
         or "name" not in item_data
     ):
-        return { "message": "Bad request. Ensure 'price', 'store_id' and 'name' are included in the JSON payload" }, 400
+        abort( 400, message="Bad request. Ensure 'price', 'store_id' and 'name' are included in the JSON payload" )
     # Ensure that same item is not added twice
     for item in items.values():
         if(
@@ -96,7 +97,7 @@ def create_item():
             return { "message": "Item already exists" }, 400
         
     if item_data["store_id"] not in stores:
-        return { "message": "Store not found" }, 404
+        abort( 404, message="Store not found" )
     
     item_id = uuid.uuid4().hex
     item = { **item_data, "id":item_id }
@@ -110,7 +111,7 @@ def delete_item(item_id):
         del items[item_id]
         return { "message":"Item deleted" }, 201
     except KeyError:
-        return { "message":"Item not found" }, 404
+        abort( 404, message="Item not found" )
 
 @app.put("/item/<string:item_id>")
 def update_item(item_id):
@@ -121,11 +122,11 @@ def update_item(item_id):
         "price" not in item_data
         and "name" not in item_data
     ):
-        return { "message": "Bad request. Ensure 'price' and 'name' are included in the JSON payload" }, 400
+        abort( 400, message="Bad request. Ensure 'price' and 'name' are included in the JSON payload")
     
     try:
         item = items[item_id]
         item |= item_data
         return item
     except KeyError:
-        return { "message":"Item not found" }, 404
+        abort( 404, message="Item not found" )
